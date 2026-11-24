@@ -31,22 +31,103 @@ public final class ContentPackDatabase {
 
         if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
             while sqlite3_step(stmt) == SQLITE_ROW {
-                let code = colString(stmt, 0)
-                let name = colString(stmt, 1)
-                let subtitle = colString(stmt, 2)
                 let domainsJson = colString(stmt, 3)
-                let disclaimer = colString(stmt, 4)
-                let active = sqlite3_column_int(stmt, 5) == 1
-
                 let domains = (try? JSONDecoder().decode([ExamDomainInfo].self, from: Data(domainsJson.utf8))) ?? []
                 results.append(
                     ExamTrack(
-                        examCode: code,
-                        displayName: name,
-                        subtitle: subtitle,
+                        examCode: colString(stmt, 0),
+                        displayName: colString(stmt, 1),
+                        subtitle: colString(stmt, 2),
                         domains: domains,
-                        trademarkDisclaimer: disclaimer,
-                        isActive: active
+                        trademarkDisclaimer: colString(stmt, 4),
+                        isActive: sqlite3_column_int(stmt, 5) == 1
+                    )
+                )
+            }
+        }
+        sqlite3_finalize(stmt)
+        return results
+    }
+
+    public func loadSkillUnits(examCode: String) -> [SkillUnit] {
+        guard let db = db else { return [] }
+        let sql = """
+        SELECT id, exam_code, unit_order, title, subtitle, theme_color, icon_name, focus_type, drug_ids_json
+        FROM skill_units WHERE exam_code = ? ORDER BY unit_order ASC;
+        """
+        var stmt: OpaquePointer?
+        var results: [SkillUnit] = []
+
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            sqlite3_bind_text(stmt, 1, (examCode as NSString).utf8String, -1, nil)
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let drugIdsJson = colString(stmt, 8)
+                let drugIds = (try? JSONDecoder().decode([String].self, from: Data(drugIdsJson.utf8))) ?? []
+                results.append(
+                    SkillUnit(
+                        id: colString(stmt, 0),
+                        examCode: colString(stmt, 1),
+                        unitOrder: Int(sqlite3_column_int(stmt, 2)),
+                        title: colString(stmt, 3),
+                        subtitle: colString(stmt, 4),
+                        themeColor: colString(stmt, 5),
+                        iconName: colString(stmt, 6),
+                        focusType: colString(stmt, 7),
+                        drugIds: drugIds
+                    )
+                )
+            }
+        }
+        sqlite3_finalize(stmt)
+        return results
+    }
+
+    public func loadDrugStems() -> [DrugStemItem] {
+        guard let db = db else { return [] }
+        let sql = "SELECT id, stem, position, drug_class, clinical_pearl, example_drugs_json, trap_note FROM drug_stems ORDER BY stem ASC;"
+        var stmt: OpaquePointer?
+        var results: [DrugStemItem] = []
+
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let exJson = colString(stmt, 5)
+                let examples = (try? JSONDecoder().decode([String].self, from: Data(exJson.utf8))) ?? []
+                results.append(
+                    DrugStemItem(
+                        id: colString(stmt, 0),
+                        stem: colString(stmt, 1),
+                        position: colString(stmt, 2),
+                        drugClass: colString(stmt, 3),
+                        clinicalPearl: colString(stmt, 4),
+                        exampleDrugs: examples,
+                        trapNote: colString(stmt, 6)
+                    )
+                )
+            }
+        }
+        sqlite3_finalize(stmt)
+        return results
+    }
+
+    public func loadSigDrills() -> [SigDrillItem] {
+        guard let db = db else { return [] }
+        let sql = "SELECT id, rx_shorthand, correct_tokens_json, distractor_tokens_json, clinical_tip FROM sig_drills ORDER BY id ASC;"
+        var stmt: OpaquePointer?
+        var results: [SigDrillItem] = []
+
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let cJson = colString(stmt, 2)
+                let dJson = colString(stmt, 3)
+                let correct = (try? JSONDecoder().decode([String].self, from: Data(cJson.utf8))) ?? []
+                let distractors = (try? JSONDecoder().decode([String].self, from: Data(dJson.utf8))) ?? []
+                results.append(
+                    SigDrillItem(
+                        id: colString(stmt, 0),
+                        rxShorthand: colString(stmt, 1),
+                        correctTokens: correct,
+                        distractorTokens: distractors,
+                        clinicalTip: colString(stmt, 4)
                     )
                 )
             }

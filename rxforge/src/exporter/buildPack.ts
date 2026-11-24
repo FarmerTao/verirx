@@ -5,12 +5,20 @@ import { DEFAULT_IOS_PACK_DB, SCHEMA_PATH, type StagingDatabase } from "../db.js
 
 /**
  * Compiles a clean, compact, read-only SQLite content bundle for the iOS app.
- * Strips unapproved/rejected drafts and Blind Critic internal logs.
+ * Includes Duolingo-style skill_units, drug_stems, sig_drills, drugs, flashcards, and approved questions.
  */
 export function exportApprovedPackToIos(
   staging: StagingDatabase,
   outputPath: string = DEFAULT_IOS_PACK_DB
-): { drugs: number; flashcards: number; questions: number; bytes: number } {
+): {
+  units: number;
+  stems: number;
+  sigDrills: number;
+  drugs: number;
+  flashcards: number;
+  questions: number;
+  bytes: number;
+} {
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   if (fs.existsSync(outputPath)) {
     fs.unlinkSync(outputPath);
@@ -21,7 +29,7 @@ export function exportApprovedPackToIos(
   outDb.exec(schemaSql);
 
   const metaInsert = outDb.prepare("INSERT INTO pack_meta (key, value) VALUES (?, ?)");
-  metaInsert.run("pack_version", "2026.11.1");
+  metaInsert.run("pack_version", "2026.11.2-duolingo");
   metaInsert.run("built_at", new Date().toISOString());
   metaInsert.run("generator", "RxForge Offline Factory");
 
@@ -38,6 +46,59 @@ export function exportApprovedPackToIos(
       String(e.domains_json),
       String(e.trademark_disclaimer),
       Number(e.is_active)
+    );
+  }
+
+  const units = staging.db
+    .prepare("SELECT * FROM skill_units ORDER BY unit_order ASC")
+    .all() as Record<string, unknown>[];
+  const unitStmt = outDb.prepare(`
+    INSERT INTO skill_units (id, exam_code, unit_order, title, subtitle, theme_color, icon_name, focus_type, drug_ids_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  for (const u of units) {
+    unitStmt.run(
+      String(u.id),
+      String(u.exam_code),
+      Number(u.unit_order),
+      String(u.title),
+      String(u.subtitle),
+      String(u.theme_color),
+      String(u.icon_name),
+      String(u.focus_type),
+      String(u.drug_ids_json)
+    );
+  }
+
+  const stems = staging.db.prepare("SELECT * FROM drug_stems").all() as Record<string, unknown>[];
+  const stemStmt = outDb.prepare(`
+    INSERT INTO drug_stems (id, stem, position, drug_class, clinical_pearl, example_drugs_json, trap_note)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  for (const s of stems) {
+    stemStmt.run(
+      String(s.id),
+      String(s.stem),
+      String(s.position),
+      String(s.drug_class),
+      String(s.clinical_pearl),
+      String(s.example_drugs_json),
+      String(s.trap_note)
+    );
+  }
+
+  const sigDrills = staging.db.prepare("SELECT * FROM sig_drills").all() as Record<string, unknown>[];
+  const sigStmt = outDb.prepare(`
+    INSERT INTO sig_drills (id, rx_shorthand, correct_tokens_json, distractor_tokens_json, clinical_tip)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  for (const sd of sigDrills) {
+    sigStmt.run(
+      String(sd.id),
+      String(sd.rx_shorthand),
+      String(sd.correct_tokens_json),
+      String(sd.distractor_tokens_json),
+      String(sd.clinical_tip)
     );
   }
 
@@ -136,6 +197,9 @@ export function exportApprovedPackToIos(
 
   const bytes = fs.statSync(outputPath).size;
   return {
+    units: units.length,
+    stems: stems.length,
+    sigDrills: sigDrills.length,
     drugs: drugs.length,
     flashcards: flashcards.length,
     questions: questions.length,

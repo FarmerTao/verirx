@@ -8,13 +8,10 @@ struct RootTabView: View {
     var body: some View {
         TabView {
             NavigationStack {
-                TodayDashboardView(
-                    studyStore: studyStore,
-                    onOpenPaywall: { showPaywall = true }
-                )
+                SkillPathView(studyStore: studyStore)
             }
             .tabItem {
-                Label("Today", systemImage: "bolt.heart.fill")
+                Label("Path", systemImage: "map.fill")
             }
 
             NavigationStack {
@@ -24,14 +21,14 @@ struct RootTabView: View {
                 )
             }
             .tabItem {
-                Label("Practice", systemImage: "checklist.checked")
+                Label("Drills", systemImage: "dumbbell.fill")
             }
 
             NavigationStack {
                 DrugEncyclopediaView(studyStore: studyStore)
             }
             .tabItem {
-                Label("Top Drugs", systemImage: "pills.fill")
+                Label("Codex", systemImage: "character.book.closed.fill")
             }
 
             NavigationStack {
@@ -42,7 +39,7 @@ struct RootTabView: View {
                 )
             }
             .tabItem {
-                Label("Readiness", systemImage: "chart.bar.xaxis")
+                Label("Career", systemImage: "flame.fill")
             }
         }
         .sheet(isPresented: $showPaywall) {
@@ -65,21 +62,21 @@ struct OnboardingDisclaimerView: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
-            Image(systemName: "checkmark.shield.fill")
-                .font(.system(size: 56))
+            Image(systemName: "flame.circle.fill")
+                .font(.system(size: 64))
                 .foregroundStyle(.teal)
 
             Text("Welcome to VeriRx")
                 .font(.largeTitle.bold())
 
-            Text("Zero-Hallucination Pharmacology & Pharmacy Math Prep.\nEvery card and rationale is anchored to official FDA SPL labels.")
+            Text("Learn Pharmacology Like a Language.\nDecode drug stems, build Rx Sigs, and crush exam math in 5 minutes a day — 100% Free.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: 12) {
-                Label("Educational Use Only: VeriRx is designed strictly for licensure exam preparation and must never be used for clinical patient care or dosing decisions.", systemImage: "graduationcap.fill")
-                Label("100% Offline & Private: No account sign-up required. Your FSRS memory schedule stays on your iPhone.", systemImage: "lock.iphone")
+                Label("FDA-Verified & Zero Hallucination: Every drug card and Boss rationale links directly to official FDA SPL labels.", systemImage: "checkmark.shield.fill")
+                Label("Educational Use Only: Strictly for exam preparation; never use for clinical patient care or dosing decisions.", systemImage: "graduationcap.fill")
                 if let disclaimer = studyStore.currentExam?.trademarkDisclaimer {
                     Text(disclaimer)
                         .font(.caption)
@@ -105,8 +102,8 @@ struct OnboardingDisclaimerView: View {
             Button {
                 studyStore.hasAcceptedDisclaimer = true
             } label: {
-                Text("I Understand — Start Studying")
-                    .font(.headline)
+                Text("Start My 5-Min Streak")
+                    .font(.headline.bold())
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(.teal, in: RoundedRectangle(cornerRadius: 14))

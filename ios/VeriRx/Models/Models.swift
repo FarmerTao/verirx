@@ -17,6 +17,36 @@ public struct ExamTrack: Identifiable, Hashable {
     public let isActive: Bool
 }
 
+public struct SkillUnit: Identifiable, Hashable {
+    public let id: String
+    public let examCode: String
+    public let unitOrder: Int
+    public let title: String
+    public let subtitle: String
+    public let themeColor: String
+    public let iconName: String
+    public let focusType: String
+    public let drugIds: [String]
+}
+
+public struct DrugStemItem: Identifiable, Hashable {
+    public let id: String
+    public let stem: String
+    public let position: String
+    public let drugClass: String
+    public let clinicalPearl: String
+    public let exampleDrugs: [String]
+    public let trapNote: String
+}
+
+public struct SigDrillItem: Identifiable, Hashable {
+    public let id: String
+    public let rxShorthand: String
+    public let correctTokens: [String]
+    public let distractorTokens: [String]
+    public let clinicalTip: String
+}
+
 public struct DrugItem: Identifiable, Hashable {
     public let id: String
     public let genericName: String
@@ -74,6 +104,29 @@ public struct QuestionItem: Identifiable, Hashable {
     public let isFreeTier: Bool
 }
 
+public struct MatchPair: Identifiable, Hashable {
+    public let id: String
+    public let left: String
+    public let right: String
+}
+
+/// Duolingo-style micro-lesson exercise types
+public enum LessonExercise: Identifiable, Hashable {
+    case matchPairs(id: String, prompt: String, pairs: [MatchPair], pearl: String)
+    case sigWordBank(drill: SigDrillItem)
+    case stemSpotter(id: String, exampleDrug: String, stemItem: DrugStemItem, classChoices: [String])
+    case bossQuestion(question: QuestionItem)
+
+    public var id: String {
+        switch self {
+        case .matchPairs(let id, _, _, _): return id
+        case .sigWordBank(let drill): return "sig-\(drill.id)"
+        case .stemSpotter(let id, _, _, _): return id
+        case .bossQuestion(let q): return "boss-\(q.id)"
+        }
+    }
+}
+
 public enum FSRSRating: Int, Codable, CaseIterable {
     case again = 1
     case hard = 2
@@ -92,8 +145,8 @@ public enum FSRSRating: Int, Codable, CaseIterable {
 
 public struct FSRSCardState: Codable, Hashable {
     public let cardId: String
-    public var stability: Double      // S: memory stability in days
-    public var difficulty: Double     // D: item difficulty in [1, 10]
+    public var stability: Double
+    public var difficulty: Double
     public var reps: Int
     public var lapses: Int
     public var lastReview: Date?

@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DEFAULT_IOS_PACK_DB, StagingDatabase } from "./db.js";
 import { ingestTopDrugsFromOpenFda } from "./ingest/openfda.js";
+import { seedDuolingoCurriculum } from "./ingest/duolingoCurriculum.js";
 import { generateDeterministicMathQuestions } from "./math/generator.js";
 import { generateQuestionsWithPiAgents } from "./agents/piQuestionFactory.js";
 import { startReviewServer } from "./review/server.js";
@@ -36,7 +37,8 @@ async function main(): Promise<void> {
       case "ingest-fda": {
         console.log("[RxForge] Fetching live openFDA SPL labels & building flashcards...");
         const count = await ingestTopDrugsFromOpenFda(db);
-        console.log(`[RxForge] Ingested ${count} Top Drugs from openFDA.`, db.getStats());
+        const duo = seedDuolingoCurriculum(db);
+        console.log(`[RxForge] Ingested ${count} Top Drugs + Duolingo curriculum:`, duo);
         break;
       }
 
@@ -63,7 +65,7 @@ async function main(): Promise<void> {
 
       case "review": {
         startReviewServer(db, 4321);
-        return; // Keep server alive
+        return;
       }
 
       case "export-pack": {
@@ -76,14 +78,16 @@ async function main(): Promise<void> {
       }
 
       case "seed-all": {
-        console.log("[1/3] Fetching live openFDA SPL drug labels & flashcards...");
+        console.log("[1/4] Fetching live openFDA SPL drug labels & flashcards...");
         await ingestTopDrugsFromOpenFda(db);
-        console.log("[2/3] Generating deterministic pharmacy math questions...");
+        console.log("[2/4] Generating deterministic pharmacy math questions...");
         generateDeterministicMathQuestions(db);
-        console.log("[3/3] Exporting read-only SQLite bundle into ios/VeriRx/Resources/...");
+        console.log("[3/4] Seeding Duolingo drug stems, Sig word-banks & skill path units...");
+        seedDuolingoCurriculum(db);
+        console.log("[4/4] Exporting read-only SQLite bundle into ios/VeriRx/Resources/...");
         const res = exportApprovedPackToIos(db, DEFAULT_IOS_PACK_DB);
         console.log(
-          `✓ Ready! Exported ${res.drugs} drugs, ${res.flashcards} flashcards, ${res.questions} approved questions (${(res.bytes / 1024).toFixed(1)} KB).`
+          `✓ Ready! Exported ${res.units} units, ${res.stems} stems, ${res.sigDrills} Sig drills, ${res.drugs} drugs, ${res.flashcards} flashcards, ${res.questions} questions (${(res.bytes / 1024).toFixed(1)} KB).`
         );
         break;
       }

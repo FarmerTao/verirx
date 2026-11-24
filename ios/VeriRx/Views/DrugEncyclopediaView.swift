@@ -3,6 +3,7 @@ import StoreKit
 
 struct DrugEncyclopediaView: View {
     var studyStore: StudyStore
+    @State private var mode: Int = 0
     @State private var query: String = ""
 
     private var filteredDrugs: [DrugItem] {
@@ -18,34 +19,83 @@ struct DrugEncyclopediaView: View {
         }
     }
 
+    private var filteredStems: [DrugStemItem] {
+        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return studyStore.drugStems
+        }
+        let q = query.lowercased()
+        return studyStore.drugStems.filter {
+            $0.stem.lowercased().contains(q)
+                || $0.drugClass.lowercased().contains(q)
+                || $0.exampleDrugs.joined(separator: " ").lowercased().contains(q)
+        }
+    }
+
     var body: some View {
-        List(filteredDrugs) { drug in
-            NavigationLink {
-                DrugDetailView(drug: drug)
-            } label: {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(drug.tallManName ?? drug.genericName)
-                            .font(.headline)
-                        if drug.isHighAlert {
-                            badge("HIGH-ALERT", color: .red)
+        VStack(spacing: 0) {
+            Picker("Reference Mode", selection: $mode) {
+                Text("Drug Stems (-pril, -statin)").tag(0)
+                Text("Top Drugs (FDA SPL)").tag(1)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+
+            if mode == 0 {
+                List(filteredStems) { stem in
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text(stem.stem)
+                                .font(.title3.bold().monospaced())
+                                .foregroundStyle(.teal)
+                            Spacer()
+                            Text(stem.drugClass)
+                                .font(.caption.bold())
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.teal.opacity(0.14), in: Capsule())
                         }
-                        if drug.deaSchedule != "Rx" && drug.deaSchedule != "OTC" {
-                            badge(drug.deaSchedule, color: .purple)
-                        }
-                        if let rems = drug.remsProgram {
-                            badge(rems, color: .orange)
-                        }
+                        Text("Examples: \(stem.exampleDrugs.joined(separator: ", "))")
+                            .font(.subheadline.weight(.medium))
+                        Text(stem.clinicalPearl)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("⚠️ \(stem.trapNote)")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
                     }
-                    Text("\(drug.brandNames.joined(separator: ", ")) · \(drug.drugClass)")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    .padding(.vertical, 4)
                 }
-                .padding(.vertical, 2)
+            } else {
+                List(filteredDrugs) { drug in
+                    NavigationLink {
+                        DrugDetailView(drug: drug)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text(drug.tallManName ?? drug.genericName)
+                                    .font(.headline)
+                                if drug.isHighAlert {
+                                    badge("HIGH-ALERT", color: .red)
+                                }
+                                if drug.deaSchedule != "Rx" && drug.deaSchedule != "OTC" {
+                                    badge(drug.deaSchedule, color: .purple)
+                                }
+                                if let rems = drug.remsProgram {
+                                    badge(rems, color: .orange)
+                                }
+                            }
+                            Text("\(drug.brandNames.joined(separator: ", ")) · \(drug.drugClass)")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
             }
         }
-        .searchable(text: $query, prompt: "Search generic, brand, class, or C-II…")
-        .navigationTitle("Top Drugs (FDA SPL)")
+        .searchable(text: $query, prompt: "Search stems (-statin), brands, or C-II…")
+        .navigationTitle("Pharm Codex")
     }
 
     private func badge(_ text: String, color: Color) -> some View {
@@ -117,15 +167,11 @@ struct ReadinessProfileView: View {
 
     var body: some View {
         List {
-            Section("Exam Track & Schedule") {
-                Picker("Exam Track", selection: $studyStore.selectedExamCode) {
-                    ForEach(studyStore.exams.filter(\.isActive)) { exam in
-                        Text(exam.displayName).tag(exam.examCode)
-                    }
-                }
+            Section("Streak & Exam Readiness") {
+                LabeledContent("Current Streak", value: "\(studyStore.streakDays) Days 🔥")
+                LabeledContent("Total XP", value: "\(studyStore.totalXP) XP ⚡")
+                LabeledContent("Estimated PTCE Score", value: "\(studyStore.readinessScore) / 1600")
                 DatePicker("Target Exam Date", selection: $studyStore.examDate, in: Date()..., displayedComponents: .date)
-                LabeledContent("Estimated Scaled Score", value: "\(studyStore.readinessScore) / 1600")
-                LabeledContent("Questions Answered", value: "\(studyStore.attempts.count)")
             }
 
             Section("Domain Mastery (CAT Theta)") {
@@ -149,13 +195,29 @@ struct ReadinessProfileView: View {
                 }
             }
 
-            Section("Membership") {
-                if studyStore.isProUnlocked {
-                    Label("VeriRx Pro Unlocked", systemImage: "checkmark.seal.fill")
-                        .foregroundStyle(.green)
-                } else {
-                    Button("Upgrade to VeriRx Pro", action: onOpenPaywall)
+            // Ethical Free-App Monetization Slot: PTCB-Recognized Course & CPhT Hiring Partners
+            Section("Next Steps to Get Certified & Hired") {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Need Your PTCB-Recognized Training Certificate?")
+                        .font(.subheadline.bold())
+                    Text("Compare accredited online CPhT prerequisite programs to unlock exam eligibility.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
+                .padding(.vertical, 2)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Hospital & Retail Pharmacy Hiring Board")
+                        .font(.subheadline.bold())
+                    Text("Readiness 1400+ unlocks direct CPhT job matches with sign-on bonuses.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+
+            Section("Optional Exam Cram Pass") {
+                Button("Support VeriRx / Unlock Mock Exam Pack", action: onOpenPaywall)
                 Button("Restore Purchases") {
                     Task { await storeKit.restorePurchases(studyStore: studyStore) }
                 }
@@ -172,7 +234,7 @@ struct ReadinessProfileView: View {
                 }
             }
         }
-        .navigationTitle("Readiness")
+        .navigationTitle("Career & Readiness")
     }
 }
 
@@ -185,31 +247,24 @@ struct PaywallSheetView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    Image(systemName: "sparkles.rectangle.stack.fill")
+                    Image(systemName: "crown.fill")
                         .font(.system(size: 48))
-                        .foregroundStyle(.teal)
+                        .foregroundStyle(.yellow)
                         .padding(.top, 12)
 
-                    Text("Pass Your Exam Without Paying $400+")
+                    Text("VeriRx Super (Optional)")
                         .font(.title2.bold())
-                        .multilineTextAlignment(.center)
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Label("All Top 200 Drug FSRS Flashcards with FDA SPL Links", systemImage: "checkmark.circle.fill")
-                        Label("Unlimited Pharmacy Math & Alligation Drills", systemImage: "checkmark.circle.fill")
-                        Label("Full Computerized Adaptive (CAT) Readiness Simulator", systemImage: "checkmark.circle.fill")
-                        Label("100% Offline Access — Study Anywhere", systemImage: "checkmark.circle.fill")
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.primary)
-                    .padding()
-                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+                    Text("All daily path lessons are 100% free! Upgrade only if you want unlimited Streak Freezes, ad-free mode, and full 90-question timed mock exams.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
 
                     ForEach(storeKit.products, id: \.id) { product in
                         Button {
                             Task {
                                 await storeKit.purchase(product, studyStore: studyStore)
-                                if studyStore.isProUnlocked { dismiss() }
+                                dismiss()
                             }
                         } label: {
                             HStack {
@@ -226,10 +281,6 @@ struct PaywallSheetView: View {
                         }
                     }
 
-                    if let err = storeKit.errorMessage {
-                        Text(err).font(.caption).foregroundStyle(.red)
-                    }
-
                     Button("Restore Purchases") {
                         Task { await storeKit.restorePurchases(studyStore: studyStore) }
                     }
@@ -244,7 +295,7 @@ struct PaywallSheetView: View {
                 }
                 .padding()
             }
-            .navigationTitle("VeriRx Pro")
+            .navigationTitle("VeriRx Super")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

@@ -77,12 +77,46 @@ public final class StudyStore {
         )
     }
 
+    public enum NodeState: Equatable {
+        case completed
+        case current
+        case locked
+    }
+
     public func nodeId(unit: SkillUnit, step: Int) -> String {
         "\(unit.id)-node-\(step)"
     }
 
     public func isNodeCompleted(unit: SkillUnit, step: Int) -> Bool {
         completedNodeIds.contains(nodeId(unit: unit, step: step))
+    }
+
+    /// Returns the ID of the single active next node along the linear path.
+    public var currentFocusNodeId: String? {
+        for unit in skillUnits.sorted(by: { $0.unitOrder < $1.unitOrder }) {
+            for step in 1...3 {
+                let id = nodeId(unit: unit, step: step)
+                if !completedNodeIds.contains(id) {
+                    return id
+                }
+            }
+        }
+        return nil
+    }
+
+    public func nodeState(unit: SkillUnit, step: Int) -> NodeState {
+        let id = nodeId(unit: unit, step: step)
+        if completedNodeIds.contains(id) {
+            return .completed
+        }
+        if currentFocusNodeId == id {
+            return .current
+        }
+        return .locked
+    }
+
+    public func unitCompletedCount(for unit: SkillUnit) -> Int {
+        (1...3).filter { isNodeCompleted(unit: unit, step: $0) }.count
     }
 
     /// Builds a 5-to-6 exercise Duolingo micro-lesson mixing stems, brand-generic matching, Sig word-banks, and FDA Boss MCQs!

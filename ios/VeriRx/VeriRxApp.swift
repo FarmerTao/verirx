@@ -8,6 +8,7 @@ struct VeriRxApp: App {
     var body: some Scene {
         WindowGroup {
             RootTabView(studyStore: studyStore, storeKit: storeKit)
+                .fontDesign(.rounded)
                 .task {
                     await storeKit.start(studyStore: studyStore)
                 }

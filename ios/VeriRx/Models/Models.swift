@@ -1,0 +1,123 @@
+import Foundation
+
+public struct ExamDomainInfo: Codable, Identifiable, Hashable {
+    public var id: String { code }
+    public let code: String
+    public let name: String
+    public let weight_pct: Double
+}
+
+public struct ExamTrack: Identifiable, Hashable {
+    public var id: String { examCode }
+    public let examCode: String
+    public let displayName: String
+    public let subtitle: String
+    public let domains: [ExamDomainInfo]
+    public let trademarkDisclaimer: String
+    public let isActive: Bool
+}
+
+public struct DrugItem: Identifiable, Hashable {
+    public let id: String
+    public let genericName: String
+    public let brandNames: [String]
+    public let tallManName: String?
+    public let drugClass: String
+    public let deaSchedule: String
+    public let remsProgram: String?
+    public let indicationsSummary: String
+    public let mechanismSummary: String
+    public let boxedWarning: String?
+    public let keyAdverseEffects: String
+    public let keyInteractions: String
+    public let storageHandling: String
+    public let isHighAlert: Bool
+    public let fdaSplSetId: String
+    public let dailymedUrl: String
+}
+
+public struct FlashcardItem: Identifiable, Hashable {
+    public let id: String
+    public let drugId: String?
+    public let examCode: String
+    public let domainCode: String
+    public let cardType: String
+    public let frontPrompt: String
+    public let backAnswer: String
+    public let backDetail: String
+    public let citationLabel: String
+    public let citationUrl: String
+    public let isFreeTier: Bool
+}
+
+public struct ChoiceOption: Codable, Identifiable, Hashable {
+    public let id: String
+    public let text: String
+    public let rationale: String
+}
+
+public struct QuestionItem: Identifiable, Hashable {
+    public let id: String
+    public let drugId: String?
+    public let examCode: String
+    public let domainCode: String
+    public let questionType: String
+    public let difficulty: Int
+    public let stem: String
+    public let choices: [ChoiceOption]
+    public let correctChoiceId: String
+    public let explanation: String
+    public let fdaSplSetId: String?
+    public let citationQuote: String
+    public let citationUrl: String
+    public let generatorSource: String
+    public let isFreeTier: Bool
+}
+
+public enum FSRSRating: Int, Codable, CaseIterable {
+    case again = 1
+    case hard = 2
+    case good = 3
+    case easy = 4
+
+    public var title: String {
+        switch self {
+        case .again: return "Again"
+        case .hard: return "Hard"
+        case .good: return "Good"
+        case .easy: return "Easy"
+        }
+    }
+}
+
+public struct FSRSCardState: Codable, Hashable {
+    public let cardId: String
+    public var stability: Double      // S: memory stability in days
+    public var difficulty: Double     // D: item difficulty in [1, 10]
+    public var reps: Int
+    public var lapses: Int
+    public var lastReview: Date?
+    public var nextDue: Date
+
+    public static func initial(cardId: String, now: Date = Date()) -> FSRSCardState {
+        FSRSCardState(
+            cardId: cardId,
+            stability: 0,
+            difficulty: 5.0,
+            reps: 0,
+            lapses: 0,
+            lastReview: nil,
+            nextDue: now
+        )
+    }
+}
+
+public struct QuestionAttempt: Codable, Hashable, Identifiable {
+    public var id: String { "\(questionId)-\(timestamp.timeIntervalSince1970)" }
+    public let questionId: String
+    public let domainCode: String
+    public let difficulty: Int
+    public let selectedChoiceId: String
+    public let isCorrect: Bool
+    public let timestamp: Date
+}

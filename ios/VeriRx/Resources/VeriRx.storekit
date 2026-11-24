@@ -1,0 +1,96 @@
+{
+  "identifier" : "8D9A2F10",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "39.99",
+      "familyShareable" : false,
+      "internalID" : "verirx_lifetime_01",
+      "localizations" : [
+        {
+          "description" : "Lifetime offline access to all PTCE & Pharmacology flashcards, math generator, and adaptive mock exams.",
+          "displayName" : "VeriRx Lifetime Exam Pass",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.verirx.app.lifetime",
+      "referenceName" : "VeriRx Lifetime Pass",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "100001",
+    "_developerTeamID" : "TEAMID0000"
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "verirx_pro_group",
+      "localizations" : [
+
+      ],
+      "name" : "VeriRx Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "verirx_monthly_01",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Full access to Top 200 FDA-cited flashcards, pharmacy math drills, and adaptive CAT practice.",
+              "displayName" : "VeriRx Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.verirx.app.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "VeriRx Monthly",
+          "subscriptionGroupID" : "verirx_pro_group",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "24.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "verirx_quarterly_01",
+          "introductoryOffer" : {
+            "internalID" : "verirx_trial_3d",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "3-month exam cram pass with 3-day free trial.",
+              "displayName" : "VeriRx Pro 3-Month Pass",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.verirx.app.quarterly",
+          "recurringSubscriptionPeriod" : "P3M",
+          "referenceName" : "VeriRx Quarterly",
+          "subscriptionGroupID" : "verirx_pro_group",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@verirx/rxforge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "RxForge: Multi-Agent offline pharmacology question factory built on @mariozechner/pi-ai & pi-agent-core",
+  "scripts": {
+    "ingest:fda": "node --no-warnings --import tsx src/cli.ts ingest-fda",
+    "gen:math": "node --no-warnings --import tsx src/cli.ts gen-math",
+    "gen:ai": "node --no-warnings --import tsx src/cli.ts gen-ai",
+    "review": "node --no-warnings --import tsx src/cli.ts review",
+    "export:pack": "node --no-warnings --import tsx src/cli.ts export-pack",
+    "seed:all": "node --no-warnings --import tsx src/cli.ts seed-all",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mariozechner/pi-agent-core": "^0.73.1",
+    "@mariozechner/pi-ai": "^0.73.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

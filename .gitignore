@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# RxForge raw cache & local staging DB
+rxforge/data/raw/
+rxforge/data/staging.sqlite
+rxforge/data/staging.sqlite-*
+
+# macOS & Xcode
+.DS_Store
+ios/build/
+ios/DerivedData/
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+ios/.swiftpm/
